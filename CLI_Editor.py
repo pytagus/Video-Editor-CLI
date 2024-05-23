@@ -7,8 +7,8 @@ from PyQt5.QtWidgets import QApplication, QFileDialog
 def parse_time(time_str):
     """Parse a time string in mm.ss or ss format and return the time in seconds."""
     if '.' in time_str:
-        minutes, seconds = time_str.split('.')
-        return int(minutes) * 60 + int(seconds)
+        minutes, seconds = map(int, time_str.split('.'))
+        return minutes * 60 + seconds
     else:
         return int(time_str)
 
