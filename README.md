@@ -21,7 +21,7 @@ Ensure that Python is installed on your machine. You can download Python from [P
 
 Open your terminal and run the following commands to install the necessary libraries:
 
-```bash
+
 pip install click moviepy PyQt5
 
 ### Available Commands
