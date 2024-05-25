@@ -1,5 +1,6 @@
 # Video-Editor-CLI
-Video Editor CLI is a powerful command-line tool for video editing. 
+
+Video Editor CLI is a powerful command-line tool for video editing.
 
 ## Features
 
@@ -8,6 +9,8 @@ Video Editor CLI is a powerful command-line tool for video editing.
 - **List Videos**: Display all added videos with their index and filename.
 - **List Segments**: Display all defined segments with video indices and filenames.
 - **Set Segment Order**: Arrange segments in the desired order for the final edit.
+- **Randomize Segment Order**: Arrange segments in a random order for the final edit.
+- **Auto Montage**: Automatically create segments for each video by removing 2 seconds from the beginning and end, and arrange them in the order of the videos.
 - **Merge Videos**: Concatenate the defined segments and apply a fade-out transition at the end of the film.
 - **Show Statistics**: View the number of segments, the duration of each segment, and the total duration of the film.
 
@@ -21,20 +24,20 @@ Ensure that Python is installed on your machine. You can download Python from [P
 
 Open your terminal and run the following commands to install the necessary libraries:
 
-
 pip install click moviepy PyQt5
+
 
 ### Available Commands
 
-1.  **Add a Video**
+1.  **Add Videos**
     
-    *   Select a video to add to your project (supported formats: **.mp4**, **.avi**, **.mov**, **.mkv**).
+    *   Select videos to add to your project (supported formats: **.mp4**, **.avi**, **.mov**, **.mkv**).
         
 2.  **Add a Segment**
     
     *   Enter the index of the video (starting from 1).
         
-    *   Enter the start and end time of the segment in seconds or minutes:seconds (e.g., **1.30** for 1 minute and 30 seconds).
+    *   Enter the start and end time of the segment in seconds or minutes(e.g., **1.30** for 1 minute and 30 seconds).
         
 3.  **List Videos**
     
@@ -48,15 +51,23 @@ pip install click moviepy PyQt5
     
     *   Enter the order of segments as pairs **video\_index:segment\_index**, separated by commas (e.g., **1:1,2:1,1:2**).
         
-6.  **Merge Videos**
+6.  **Randomize Segment Order**
+    
+    *   Arrange segments in a random order for the final edit.
+        
+7.  **Auto Montage**
+    
+    *   Automatically create segments for each video by removing 2 seconds from the beginning and end, and arrange them in the order of the videos.
+        
+8.  **Merge Videos**
     
     *   Concatenate the defined segments in the specified order and create the final video with a 4-second fade-out transition at the end.
         
-7.  **Show Statistics**
+9.  **Show Statistics**
     
     *   Display the total number of segments, the duration of each segment, and the total duration of the final video.
         
-8.  **Quit**
+10.  **Quit**
     
     *   Close the interactive menu.
         
@@ -96,4 +107,4 @@ Contributions are welcome! Please submit a pull request or open an issue to disc
 License
 -------
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License
