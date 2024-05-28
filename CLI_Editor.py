@@ -13,6 +13,12 @@ def parse_time(time_str):
     else:
         return int(time_str)
 
+def format_time(seconds):
+    """Format seconds to mm:ss with two decimal places."""
+    minutes = int(seconds // 60)
+    seconds = seconds % 60
+    return f"{minutes}m{seconds:.2f}s"
+
 class VideoEditorCLI:
     def __init__(self):
         self.video_files = []
@@ -49,14 +55,15 @@ class VideoEditorCLI:
             for video_index, segs in self.segments.items():
                 file_name = os.path.basename(self.video_files[video_index])
                 for i, (start, end) in enumerate(segs):
-                    click.echo(f"Vidéo {video_index + 1} ({file_name}), Segment {i + 1}: Start {start} s, End {end} s")
+                    click.echo(f"Vidéo {video_index + 1} ({file_name}), Segment {i + 1}: Start {format_time(start)}, End {format_time(end)}")
         except Exception as e:
             click.echo(f"Erreur lors de la liste des segments : {str(e)}")
 
     def list_videos(self):
         try:
             for i, file_path in enumerate(self.video_files):
-                click.echo(f"Vidéo {i + 1}: {os.path.basename(file_path)}")
+                duration = self.video_clips[i].duration
+                click.echo(f"Vidéo {i + 1}: {os.path.basename(file_path)}, Durée totale: {format_time(duration)}")
         except Exception as e:
             click.echo(f"Erreur lors de la liste des vidéos : {str(e)}")
 
@@ -134,9 +141,9 @@ class VideoEditorCLI:
                 for i, (start, end) in enumerate(segs):
                     duration = end - start
                     total_duration += duration
-                    click.echo(f"Vidéo {video_index + 1} ({file_name}), Segment {i + 1}: Durée {duration} secondes (de {start} s à {end} s)")
+                    click.echo(f"Vidéo {video_index + 1} ({file_name}), Segment {i + 1}: Durée {format_time(duration)} (de {format_time(start)} à {format_time(end)})")
             click.echo(f"\nNombre total de segments: {sum(len(segs) for segs in self.segments.values())}")
-            click.echo(f"Durée totale du film: {total_duration} secondes")
+            click.echo(f"Durée totale du film: {format_time(total_duration)}")
         except Exception as e:
             click.echo(f"Erreur lors de l'affichage des statistiques : {str(e)}")
 
