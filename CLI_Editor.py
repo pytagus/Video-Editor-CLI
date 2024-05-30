@@ -1,6 +1,7 @@
 import os
 import random
 import click
+import json
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from moviepy.video.fx.all import fadeout
 from PyQt5.QtWidgets import QApplication, QFileDialog
@@ -107,6 +108,18 @@ class VideoEditorCLI:
         except Exception as e:
             click.echo(f"Erreur lors du montage automatique : {str(e)}")
 
+    def remove_segment(self, video_index, segment_index):
+        try:
+            video_index -= 1  # Convert to 0-based index
+            segment_index -= 1  # Convert to 0-based index
+            if video_index < len(self.video_files) and segment_index < len(self.segments[video_index]):
+                removed_segment = self.segments[video_index].pop(segment_index)
+                click.echo(f"Segment retiré : Vidéo {video_index + 1}, Segment {segment_index + 1}")
+            else:
+                click.echo("Index vidéo ou segment non valide.")
+        except Exception as e:
+            click.echo(f"Erreur lors de la suppression du segment : {str(e)}")
+            
     def merge_videos(self, output_path):
         try:
             if not self.segment_order:
@@ -146,6 +159,36 @@ class VideoEditorCLI:
             click.echo(f"Durée totale du film: {format_time(total_duration)}")
         except Exception as e:
             click.echo(f"Erreur lors de l'affichage des statistiques : {str(e)}")
+            
+            
+    def save_state(self, file_path):
+        try:
+            state = {
+                'video_files': self.video_files,
+                'segments': self.segments,
+                'segment_order': self.segment_order
+            }
+            with open(file_path, 'w') as file:
+                json.dump(state, file)
+            click.echo(f"État sauvegardé dans {file_path}")
+        except Exception as e:
+            click.echo(f"Erreur lors de la sauvegarde de l'état : {str(e)}")
+
+    def load_state(self, file_path):
+        try:
+            with open(file_path, 'r') as file:
+                state = json.load(file)
+            self.video_files = state['video_files']
+            self.segments = {int(k): v for k, v in state['segments'].items()}
+            self.segment_order = [tuple(pair) for pair in state['segment_order']]
+            
+            # Recharger les clips vidéo
+            self.video_clips = [VideoFileClip(file_path) for file_path in self.video_files]
+            
+            click.echo(f"État chargé depuis {file_path}")
+        except Exception as e:
+            click.echo(f"Erreur lors du chargement de l'état : {str(e)}")
+            
 
 @click.group()
 def cli():
@@ -166,6 +209,14 @@ def add_videos(file_paths):
 def add_segment(video_index, start_time, end_time):
     """Ajoute un segment à une vidéo."""
     editor.add_segment(video_index, start_time, end_time)
+    
+    
+@cli.command()
+@click.argument('video_index', type=int)
+@click.argument('segment_index', type=int)
+def remove_segment(video_index, segment_index):
+    """Supprime un segment d'une vidéo."""
+    editor.remove_segment(video_index, segment_index)
 
 @cli.command()
 def list_segments():
@@ -199,6 +250,18 @@ def auto_montage():
 def merge_videos(output_path):
     """Fusionne les vidéos et sauvegarde le résultat."""
     editor.merge_videos(output_path)
+    
+@cli.command()
+@click.argument('file_path', type=click.Path())
+def save_state(file_path):
+    """Sauvegarde l'état actuel du montage dans un fichier."""
+    editor.save_state(file_path)
+
+@cli.command()
+@click.argument('file_path', type=click.Path(exists=True))
+def load_state(file_path):
+    """Charge l'état du montage depuis un fichier."""
+    editor.load_state(file_path)
 
 @cli.command()
 def show_stats():
@@ -213,14 +276,16 @@ def interactive():
         click.echo("\nMenu:")
         click.echo("1. Ajouter des vidéos")
         click.echo("2. Ajouter un segment")
-        click.echo("3. Lister les vidéos")
-        click.echo("4. Lister les segments")
-        click.echo("5. Définir l'ordre des segments")
-        click.echo("6. Définir un ordre aléatoire des segments")
-        click.echo("7. Montage automatique")
-        click.echo("8. Fusionner les vidéos")
-        click.echo("9. Afficher les statistiques")
-        click.echo("10. Quitter")
+        click.echo("3. Supprimer un segment")
+        click.echo("4. Lister les vidéos")
+        click.echo("5. Lister les segments")
+        click.echo("6. Définir l'ordre des segments")
+        click.echo("7. Définir un ordre aléatoire des segments")
+        click.echo("8. Montage automatique")
+        click.echo("9. Fusionner les vidéos")
+        click.echo("10. Afficher les statistiques")
+        click.echo("11. Sauvegarder Montage")
+        click.echo("12. Charger Montage")
 
         choice = click.prompt("Choisissez une option", type=int)
 
@@ -235,26 +300,36 @@ def interactive():
                 end_time = click.prompt("Entrez le temps de fin (en minutes:secondes ou secondes)", type=str)
                 editor.add_segment(video_index, start_time, end_time)
             elif choice == 3:
-                editor.list_videos()
+                video_index = click.prompt("Entrez l'index de la vidéo", type=int)
+                segment_index = click.prompt("Entrez l'index du segment", type=int)
+                editor.remove_segment(video_index, segment_index)
             elif choice == 4:
-                editor.list_segments()
+                editor.list_videos()
             elif choice == 5:
+                editor.list_segments()
+            elif choice == 6:
                 click.echo("Entrez l'ordre des segments sous forme de paires video_index:segment_index, séparées par des virgules.")
                 click.echo("Exemple: 1:1,2:1,1:2")
                 order = click.prompt("Ordre des segments", type=str)
                 editor.set_segment_order(order)
-            elif choice == 6:
-                editor.randomize_segment_order()
             elif choice == 7:
-                editor.auto_montage()
+                editor.randomize_segment_order()
             elif choice == 8:
+                editor.auto_montage()
+            elif choice == 9:
                 output_path, _ = QFileDialog.getSaveFileName(None, "Entrez le chemin de sauvegarde de la vidéo fusionnée", "", "Video Files (*.mp4)")
                 if output_path:
                     editor.merge_videos(output_path)
-            elif choice == 9:
-                editor.show_stats()
             elif choice == 10:
-                break
+                editor.show_stats()
+            elif choice == 11:
+                file_path, _ = QFileDialog.getSaveFileName(None, "Entrez le chemin pour sauvegarder l'état", "", "JSON Files (*.json)")
+                if file_path:
+                    editor.save_state(file_path)
+            elif choice == 12:
+                file_path, _ = QFileDialog.getOpenFileName(None, "Choisissez un fichier d'état à charger", "", "JSON Files (*.json)")
+                if file_path:
+                    editor.load_state(file_path)
             else:
                 click.echo("Option non valide, veuillez réessayer.")
         except Exception as e:
