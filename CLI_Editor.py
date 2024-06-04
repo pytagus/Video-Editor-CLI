@@ -108,6 +108,24 @@ class VideoEditorCLI:
         except Exception as e:
             click.echo(f"Erreur lors du montage automatique : {str(e)}")
 
+    def super_auto_montage(self):
+        try:
+            self.segments.clear()
+            self.segment_order.clear()
+            for video_index, clip in enumerate(self.video_clips):
+                duration = clip.duration
+                if duration > 4:
+                    start = random.uniform(0, duration - 4)
+                    end = start + random.uniform(2, min(10, duration - start))
+                    self.segments[video_index] = [(start, end)]
+                    self.segment_order.append((video_index, 0))
+                    click.echo(f"Segment super automatique ajouté pour la vidéo {video_index + 1}: Start {start:.2f} s, End {end:.2f} s")
+                else:
+                    click.echo(f"Vidéo {video_index + 1} trop courte pour ajouter un segment super automatique.")
+            click.echo("Montage super automatique terminé.")
+        except Exception as e:
+            click.echo(f"Erreur lors du montage super automatique : {str(e)}")
+
     def remove_segment(self, video_index, segment_index):
         try:
             video_index -= 1  # Convert to 0-based index
@@ -246,6 +264,11 @@ def auto_montage():
     editor.auto_montage()
 
 @cli.command()
+def super_auto_montage():
+    """Réalise un montage super automatique en ajoutant un segment aléatoire pour chaque vidéo."""
+    editor.super_auto_montage()
+
+@cli.command()
 @click.argument('output_path', type=click.Path())
 def merge_videos(output_path):
     """Fusionne les vidéos et sauvegarde le résultat."""
@@ -282,10 +305,11 @@ def interactive():
         click.echo("6. Définir l'ordre des segments")
         click.echo("7. Définir un ordre aléatoire des segments")
         click.echo("8. Montage automatique")
-        click.echo("9. Fusionner les vidéos")
-        click.echo("10. Afficher les statistiques")
-        click.echo("11. Sauvegarder Montage")
-        click.echo("12. Charger Montage")
+        click.echo("9. Montage super automatique")
+        click.echo("10. Fusionner les vidéos")
+        click.echo("11. Afficher les statistiques")
+        click.echo("12. Sauvegarder Montage")
+        click.echo("13. Charger Montage")
 
         choice = click.prompt("Choisissez une option", type=int)
 
@@ -317,16 +341,18 @@ def interactive():
             elif choice == 8:
                 editor.auto_montage()
             elif choice == 9:
+                editor.super_auto_montage()
+            elif choice == 10:
                 output_path, _ = QFileDialog.getSaveFileName(None, "Entrez le chemin de sauvegarde de la vidéo fusionnée", "", "Video Files (*.mp4)")
                 if output_path:
                     editor.merge_videos(output_path)
-            elif choice == 10:
-                editor.show_stats()
             elif choice == 11:
+                editor.show_stats()
+            elif choice == 12:
                 file_path, _ = QFileDialog.getSaveFileName(None, "Entrez le chemin pour sauvegarder l'état", "", "JSON Files (*.json)")
                 if file_path:
                     editor.save_state(file_path)
-            elif choice == 12:
+            elif choice == 13:
                 file_path, _ = QFileDialog.getOpenFileName(None, "Choisissez un fichier d'état à charger", "", "JSON Files (*.json)")
                 if file_path:
                     editor.load_state(file_path)
